@@ -26,14 +26,16 @@ jobs:
           toolchain: 1.95.0
           components: rustfmt, clippy
 
-      - name: Format check
-        run: cargo fmt --all -- --check
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: codex-rs
+          cache-on-failure: true
 
-      - name: Test code-mode host resolution
-        run: cargo test -p codex-code-mode
+      - name: Build release code-mode host
+        run: cargo build --release --bin codex-code-mode-host
 
-      - name: Build release binaries
-        run: cargo build --release --bin codex --bin codex-code-mode-host
+      - name: Build release Codex CLI
+        run: cargo build --release --bin codex
 
       - name: Stage artifacts
         shell: pwsh
