@@ -1,0 +1,51 @@
+name: Build custom Codex 0.154.0 for Windows
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - codex-0.154.0-host-path-override
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows-x64:
+    runs-on: windows-latest
+    timeout-minutes: 120
+
+    defaults:
+      run:
+        working-directory: codex-rs
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.95.0
+          components: rustfmt, clippy
+
+      - name: Format check
+        run: cargo fmt --all -- --check
+
+      - name: Test code-mode host resolution
+        run: cargo test -p codex-code-mode
+
+      - name: Build release binaries
+        run: cargo build --release --bin codex --bin codex-code-mode-host
+
+      - name: Stage artifacts
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path ../custom-dist -Force | Out-Null
+          Copy-Item target/release/codex.exe '../custom-dist/URO dot AI API.exe'
+          Copy-Item target/release/codex-code-mode-host.exe '../custom-dist/URO dot AI API host.exe'
+          git rev-parse HEAD | Set-Content ../custom-dist/build-commit.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: codex-0.154.0-host-path-override-windows-x64
+          path: custom-dist
+          if-no-files-found: error
+          retention-days: 7
