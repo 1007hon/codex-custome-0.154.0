@@ -31,6 +31,13 @@ jobs:
           workspaces: codex-rs
           cache-on-failure: true
 
+      # Codex 0.154.0 uses OpenAI-built rusty_v8 artifacts. The upstream
+      # rusty_v8 GitHub release does not publish this Windows archive.
+      - name: Configure official Codex rusty_v8 artifacts
+        uses: ./.github/actions/setup-rusty-v8
+        with:
+          target: x86_64-pc-windows-msvc
+
       - name: Build release code-mode host
         run: cargo build --release --bin codex-code-mode-host
 
